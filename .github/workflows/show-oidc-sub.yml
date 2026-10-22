@@ -1,4 +1,4 @@
-```yaml
+
 name: Show GitHub OIDC Subject
 
 on:
@@ -28,4 +28,3 @@ jobs:
           claims = json.loads(base64.urlsafe_b64decode(payload))
           print("OIDC sub:", claims["sub"])
           ' <<< "$response"
-```
