@@ -1,0 +1,231 @@
+name: build-push
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - ".github/workflows/build-push.yml"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+
+  # ==========================================================
+  # 1. Detect Changed Services
+  # ==========================================================
+  changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_changes: ${{ steps.set-matrix.outputs.has_changes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed services
+        id: set-matrix
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          echo "Before: $BEFORE"
+          echo "After : $AFTER"
+
+          CHANGED_FILES="$(git diff --name-only "$BEFORE" "$AFTER")"
+
+          echo "=========================================="
+          echo "Changed files"
+          echo "=========================================="
+          echo "$CHANGED_FILES"
+
+          SERVICES=()
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/api-gateway/'; then
+            SERVICES+=("api-gateway")
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/member-service/'; then
+            SERVICES+=("member-service")
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/product-service/'; then
+            SERVICES+=("product-service")
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/order-service/'; then
+            SERVICES+=("order-service")
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/frontend/'; then
+            SERVICES+=("frontend")
+          fi
+
+          # Root Gradle files can affect all backend services.
+          if echo "$CHANGED_FILES" | grep -qE '^(build\.gradle|settings\.gradle)$'; then
+            SERVICES+=(
+              "api-gateway"
+              "member-service"
+              "product-service"
+              "order-service"
+            )
+          fi
+
+          # If the CI workflow itself changes, test all services.
+          if echo "$CHANGED_FILES" | grep -qE '^\.github/workflows/build-push\.yml$'; then
+            SERVICES=(
+              "api-gateway"
+              "member-service"
+              "product-service"
+              "order-service"
+              "frontend"
+            )
+          fi
+
+          # Remove duplicates.
+          if [ ${#SERVICES[@]} -gt 0 ]; then
+            MATRIX="$(
+              printf '%s\n' "${SERVICES[@]}" |
+              sort -u |
+              jq -R . |
+              jq -sc .
+            )"
+
+            echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+            echo "Services to build: $MATRIX"
+          else
+            echo 'matrix=[]' >> "$GITHUB_OUTPUT"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+
+            echo "No application services changed."
+          fi
+
+
+  # ==========================================================
+  # 2. Build Changed Docker Images and Push to Amazon ECR
+  # ==========================================================
+  build:
+    needs: changes
+
+    if: needs.changes.outputs.has_changes == 'true'
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-${{ matrix.service }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        env:
+          REGISTRY: ${{ vars.ECR_REGISTRY }}
+          SERVICE: ${{ matrix.service }}
+          TAG: ${{ github.sha }}
+
+        run: |
+          echo "=========================================="
+          echo "Service  : $SERVICE"
+          echo "Registry : $REGISTRY"
+          echo "Tag      : $TAG"
+          echo "=========================================="
+
+          docker build \
+            -f "apps/$SERVICE/Dockerfile" \
+            -t "$REGISTRY/$SERVICE:$TAG" \
+            .
+
+          echo "Pushing $REGISTRY/$SERVICE:$TAG"
+
+          docker push "$REGISTRY/$SERVICE:$TAG"
+
+          echo "Push completed: $REGISTRY/$SERVICE:$TAG"
+
+
+  # ==========================================================
+  # 3. Update GitOps Manifest
+  # ==========================================================
+  deploy:
+    needs:
+      - changes
+      - build
+
+    if: needs.changes.outputs.has_changes == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout latest main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update changed production image tags
+        env:
+          REGISTRY: ${{ vars.ECR_REGISTRY }}
+          TAG: ${{ github.sha }}
+          SERVICES: ${{ needs.changes.outputs.matrix }}
+
+        shell: bash
+        run: |
+          cd k8s/overlays/prod
+
+          echo "Changed services: $SERVICES"
+
+          echo "$SERVICES" | jq -r '.[]' | while read SERVICE; do
+
+            echo "Updating $SERVICE -> $TAG"
+
+            kustomize edit set image \
+              "$REGISTRY/$SERVICE=$REGISTRY/$SERVICE:$TAG"
+
+          done
+
+          echo "=========================================="
+          echo "Updated production image tags"
+          echo "=========================================="
+
+          cat kustomization.yaml
+
+      - name: Commit and push manifest
+        env:
+          TAG: ${{ github.sha }}
+
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add k8s/overlays/prod/kustomization.yaml
+
+          if git diff --cached --quiet; then
+            echo "No manifest changes."
+            exit 0
+          fi
+
+          git commit -m "chore: deploy $TAG [skip ci]"
+          git push origin HEAD:main

@@ -1,0 +1,91 @@
+﻿apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: msa-alert-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+
+spec:
+  groups:
+    - name: msa-pod-alerts
+      rules:
+
+        # ============================================================
+        # 1. Pod Not Ready Alert
+        # Pod가 2분 이상 Ready 상태가 아닐 경우 발생
+        # ============================================================
+        - alert: MSAPodNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="msa",
+              condition="true"
+            } == 0
+          for: 2m
+
+          labels:
+            severity: critical
+
+          annotations:
+            summary: "MSA Pod Not Ready"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has not been Ready for more than 2 minutes."
+
+
+        # ============================================================
+        # 2. High CPU Alert
+        # CPU Request 대비 사용률이 80%를 초과한 상태가
+        # 5분 이상 지속될 경우 발생
+        # ============================================================
+        - alert: MSAHighCPU
+          expr: |
+            (
+              sum by (pod) (
+                rate(
+                  container_cpu_usage_seconds_total{
+                    namespace="msa",
+                    container!="",
+                    container!="POD"
+                  }[5m]
+                )
+              )
+              /
+              sum by (pod) (
+                kube_pod_container_resource_requests{
+                  namespace="msa",
+                  resource="cpu"
+                }
+              )
+            ) * 100 > 80
+          for: 5m
+
+          labels:
+            severity: warning
+
+          annotations:
+            summary: "MSA High CPU Usage"
+            description: "Pod {{ $labels.pod }} CPU usage has exceeded 80% of its requested CPU for more than 5 minutes."
+
+
+        # ============================================================
+        # 3. HPA Max Replicas Alert
+        # HPA가 최대 Replica 수에 도달한 상태가
+        # 5분 이상 지속될 경우 발생
+        # ============================================================
+        - alert: MSAHPAMaxReplicas
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{
+              namespace="msa"
+            }
+            >=
+            kube_horizontalpodautoscaler_spec_max_replicas{
+              namespace="msa"
+            }
+          for: 5m
+
+          labels:
+            severity: warning
+
+          annotations:
+            summary: "MSA HPA Max Replicas Reached"
+            description: "HPA {{ $labels.horizontalpodautoscaler }} has been at its maximum replica count for more than 5 minutes."

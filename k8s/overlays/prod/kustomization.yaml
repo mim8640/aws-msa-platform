@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+
+namespace: msa
+
+
+
+
+
+images:
+- name: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/api-gateway
+  newName: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/api-gateway
+  newTag: 155738c5f42186321d5fc7106497a84589ad81b9
+- name: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/frontend
+  newName: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/frontend
+  newTag: 155738c5f42186321d5fc7106497a84589ad81b9
+- name: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/member-service
+  newName: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/member-service
+  newTag: b26a3ba87e641a50982df3c8cea814a8a81a9479
+- name: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/order-service
+  newName: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/order-service
+  newTag: 155738c5f42186321d5fc7106497a84589ad81b9
+- name: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/product-service
+  newName: 253041091860.dkr.ecr.ap-northeast-2.amazonaws.com/product-service
+  newTag: 155738c5f42186321d5fc7106497a84589ad81b9

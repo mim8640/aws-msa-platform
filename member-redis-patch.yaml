@@ -1,0 +1,11 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: member-service
+          env:
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: REDIS_PASSWORD

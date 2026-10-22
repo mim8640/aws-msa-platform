@@ -1,0 +1,31 @@
+{
+  "Comment": "Update MSA domains to new ingress-nginx LoadBalancer",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "api.renuvo.store",
+        "Type": "CNAME",
+        "TTL": 60,
+        "ResourceRecords": [
+          {
+            "Value": "a2e2df5a4864e4e8bbe849ebf9ad353e-918311987.ap-northeast-2.elb.amazonaws.com"
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "www.renuvo.store",
+        "Type": "CNAME",
+        "TTL": 60,
+        "ResourceRecords": [
+          {
+            "Value": "a2e2df5a4864e4e8bbe849ebf9ad353e-918311987.ap-northeast-2.elb.amazonaws.com"
+          }
+        ]
+      }
+    }
+  ]
+}

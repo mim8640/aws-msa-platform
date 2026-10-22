@@ -1,0 +1,11 @@
+﻿apiVersion: v1
+data:
+  msa-platform-monitoring.json: |
+    ...
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    grafana_dashboard: "1"
+  name: msa-platform-grafana-dashboard
+  namespace: monitoring

@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::253041091860:oidc-provider/oidc.eks.ap-northeast-2.amazonaws.com/id/39D554280C197D70C02591931B2CAC85"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "oidc.eks.ap-northeast-2.amazonaws.com/id/39D554280C197D70C02591931B2CAC85:aud": "sts.amazonaws.com",
+          "oidc.eks.ap-northeast-2.amazonaws.com/id/39D554280C197D70C02591931B2CAC85:sub": "system:serviceaccount:monitoring:monitoring-kube-prometheus-alertmanager"
+        }
+      }
+    }
+  ]
+}

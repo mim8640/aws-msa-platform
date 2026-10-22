@@ -1,0 +1,14 @@
+resources:
+  - ../../base
+namespace: msa
+replicas:
+  - name: api-gateway
+    count: 1
+  - name: member-service
+    count: 1
+  - name: product-service
+    count: 1
+  - name: order-service
+    count: 1
+  - name: frontend
+    count: 1

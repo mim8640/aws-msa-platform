@@ -1,0 +1,37 @@
+# Example replacement for product-service Deployment after Argo Rollouts is installed.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: product-service
+  namespace: msa
+spec:
+  replicas: 4
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels: { app: product-service }
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 60s }
+        - setWeight: 25
+        - pause: { duration: 120s }
+        - setWeight: 50
+        - pause: { duration: 180s }
+  template:
+    metadata:
+      labels: { app: product-service }
+    spec:
+      serviceAccountName: product-service
+      containers:
+        - name: product-service
+          image: YOUR_ECR_REGISTRY/product-service:REPLACE_ME
+          ports: [{containerPort: 8080}]
+          envFrom:
+            - configMapRef: {name: product-service-config}
+            - secretRef: {name: app-secrets}
+          readinessProbe: {httpGet: {path: /actuator/health/readiness, port: 8080}}
+          livenessProbe: {httpGet: {path: /actuator/health/liveness, port: 8080}}
+          resources:
+            requests: {cpu: 200m, memory: 256Mi}
+            limits: {cpu: "1", memory: 768Mi}

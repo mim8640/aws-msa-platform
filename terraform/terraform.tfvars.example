@@ -1,0 +1,3 @@
+aws_region = "ap-northeast-2"
+project = "msa-platform"
+image_bucket_name = "REPLACE-WITH-GLOBALLY-UNIQUE-BUCKET"

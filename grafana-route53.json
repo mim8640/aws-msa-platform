@@ -1,0 +1,18 @@
+{
+  "Comment": "Grafana ingress DNS",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "grafana.renuvo.store",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "a2e2df5a4864e4e8bbe849ebf9ad353e-918311987.ap-northeast-2.elb.amazonaws.com"
+          }
+        ]
+      }
+    }
+  ]
+}

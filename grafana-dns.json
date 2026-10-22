@@ -1,0 +1,18 @@
+{
+  "Comment": "Grafana DNS record",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "grafana.renuvo.store",
+        "Type": "CNAME",
+        "TTL": 60,
+        "ResourceRecords": [
+          {
+            "Value": "a601fb68ad771467d896fd9a028ef580-831148130.ap-northeast-2.elb.amazonaws.com"
+          }
+        ]
+      }
+    }
+  ]
+}

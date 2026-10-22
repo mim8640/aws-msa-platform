@@ -1,0 +1,19 @@
+﻿apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: msa-sns-test
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: msa-sns-test
+      rules:
+        - alert: MSAPlatformSNSTest
+          expr: vector(1)
+          for: 10s
+          labels:
+            severity: critical
+          annotations:
+            summary: "MSA SNS Test"
+            description: "Alertmanager to AWS SNS to Gmail integration test"

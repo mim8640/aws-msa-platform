@@ -1,0 +1,17 @@
+{
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_71b6d4eca1f3a996bc1cc669c88977f8.renuvo.store.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_c45cab7b5e5394c5ec173d60be4464f8.wzccmgtwzk.acm-validations.aws."
+          }
+        ]
+      }
+    }
+  ]
+}

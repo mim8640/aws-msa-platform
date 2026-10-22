@@ -1,0 +1,38 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: member
+              uri: ${MEMBER_URL:http://member-service:8080}
+              predicates:
+                - Path=/api/v1/auth/**,/api/v1/members/**
+
+            - id: product
+              uri: ${PRODUCT_URL:http://product-service:8080}
+              predicates:
+                - Path=/api/v1/products/**
+
+            - id: order
+              uri: ${ORDER_URL:http://order-service:8080}
+              predicates:
+                - Path=/api/v1/orders/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+app:
+  jwt:
+    secret: ${JWT_SECRET}

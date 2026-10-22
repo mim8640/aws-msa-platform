@@ -1,0 +1,35 @@
+alertmanager:
+  alertmanagerSpec:
+    serviceAccountName: kube-prometheus-stack-alertmanager
+
+  config:
+    global:
+      resolve_timeout: 5m
+
+    route:
+      receiver: sns
+      group_by:
+        - alertname
+        - namespace
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 4h
+
+      # Watchdog 알림은 SNS로 보내지 않음
+      routes:
+        - receiver: "null"
+          matchers:
+            - alertname = "Watchdog"
+
+    receivers:
+      # 실제 장애 알림 -> AWS SNS
+      - name: sns
+        sns_configs:
+          - topic_arn: arn:aws:sns:ap-northeast-2:253041091860:msa-platform-alerts
+            sigv4:
+              region: ap-northeast-2
+            subject: "MSA Platform Alert"
+            send_resolved: true
+
+      # Watchdog 알림 무시
+      - name: "null"

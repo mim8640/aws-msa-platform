@@ -1,0 +1,111 @@
+# ============================================================
+# Secrets / Credentials
+# ============================================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Certificates / Private keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Kubernetes local secret files
+secret.yaml
+secrets.yaml
+*secret-placeholder*
+*secret-value*
+
+# AWS credentials
+.aws/
+credentials
+.aws-sam/
+
+
+# ============================================================
+# Public AWS RDS CA Certificates
+#
+# These are public CA certificates required by the Java
+# applications for TLS connections to Amazon RDS.
+# Only these specific PEM files are allowed into Git.
+# ============================================================
+
+# member-service
+!apps/member-service/certs/
+!apps/member-service/certs/rds-root-1.pem
+!apps/member-service/certs/rds-root-2.pem
+!apps/member-service/certs/rds-root-3.pem
+
+# product-service
+!apps/product-service/certs/
+!apps/product-service/certs/rds-root-1.pem
+!apps/product-service/certs/rds-root-2.pem
+!apps/product-service/certs/rds-root-3.pem
+
+# order-service
+!apps/order-service/certs/
+!apps/order-service/certs/rds-root-1.pem
+!apps/order-service/certs/rds-root-2.pem
+!apps/order-service/certs/rds-root-3.pem
+
+
+# ============================================================
+# Terraform
+# ============================================================
+
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Terraform variable files may contain secrets
+*.tfvars
+*.tfvars.json
+
+# Terraform plans
+*.tfplan
+tfplan
+
+
+# ============================================================
+# Java / Gradle
+# ============================================================
+
+.gradle/
+build/
+target/
+*.class
+*.jar
+
+
+# ============================================================
+# IDE
+# ============================================================
+
+.idea/
+.vscode/
+*.iml
+
+
+# ============================================================
+# OS
+# ============================================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# ============================================================
+# Logs / Temporary files
+# ============================================================
+
+*.log
+*.tmp
+*.temp
+# Local secret patches
+terraform/redis-secret-patch.json

@@ -1,0 +1,5 @@
+rootProject.name = 'aws-msa-platform'
+include 'apps:api-gateway'
+include 'apps:member-service'
+include 'apps:product-service'
+include 'apps:order-service'
